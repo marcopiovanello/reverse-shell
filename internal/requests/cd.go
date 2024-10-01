@@ -1,0 +1,22 @@
+package requests
+
+import (
+	"log"
+	"net"
+
+	"github.com/imperatrice00/oculis/internal"
+	"github.com/imperatrice00/oculis/internal/client"
+	"github.com/imperatrice00/oculis/internal/command"
+)
+
+func HandleChangeDirectory(path string) client.ClientHandlerFunc {
+	return func(conn net.Conn) error {
+		req, err := internal.NewPacket(command.CD, []byte(path))
+		if err != nil {
+			log.Println(err)
+		}
+
+		req.Write(conn)
+		return nil
+	}
+}
