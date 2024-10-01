@@ -27,7 +27,7 @@ func NewClearTextClient(addr string, onConnect func(net.Conn)) (Client, error) {
 }
 
 func (c *ClearTextClient) Send(hand ClientHandlerFunc) error {
-	return hand(c.conn)
+	return hand(c.conn, nil)
 }
 
 func (c *ClearTextClient) Recoverer(onDiscovered func(net.Conn)) {

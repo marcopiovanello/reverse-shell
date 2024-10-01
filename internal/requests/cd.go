@@ -9,7 +9,7 @@ import (
 )
 
 func HandleChangeDirectory(path string) client.ClientHandlerFunc {
-	return func(conn net.Conn) error {
+	return func(conn net.Conn, key []byte) error {
 		req, err := internal.NewPacket(command.CD, []byte(path))
 		if err != nil {
 			return err

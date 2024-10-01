@@ -9,7 +9,7 @@ import (
 	"github.com/imperatrice00/oculis/internal/command"
 )
 
-func HandlePacket(conn net.Conn, state *internal.State) error {
+func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 	packet := &internal.Packet{}
 
 	err := binary.Read(conn, binary.LittleEndian, packet)
@@ -26,15 +26,18 @@ func HandlePacket(conn net.Conn, state *internal.State) error {
 		return handleListDirectory(conn, payload, state)
 	case command.DOWNLOAD:
 		payload := packet.CleanPayload()
+		if secret != nil {
+			return handleFileDownloadAES(conn, payload, state, secret)
+		}
 		return handleFileDownload(conn, payload, state)
 	case command.PWD:
 		return handleGetCurrentWorkingDirectory(conn, state)
 	case command.DOWNLOAD_DIR:
 		// TODO: implement handler
-		return nil
+		return errors.New("unimplemented method")
 	case command.QUIT:
 		// TODO: implement handler
-		return nil
+		return errors.New("unimplemented method")
 	default:
 		return errors.New("unimplemented method")
 	}

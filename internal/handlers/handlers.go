@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -120,6 +124,64 @@ func handleFileDownload(conn net.Conn, path []byte, state *internal.State) error
 
 		binary.Write(conn, binary.LittleEndian, int32(read))
 		conn.Write(buf[:read])
+	}
+
+	return nil
+}
+
+func handleFileDownloadAES(conn net.Conn, path []byte, state *internal.State, key []byte) error {
+	file := filepath.Clean(string(path))
+
+	if !filepath.IsAbs(file) {
+		file = filepath.Join(state.GetCurrentDirectory(), file)
+	}
+
+	fd, err := os.Open(file)
+	if err != nil {
+		handleFileError(conn)
+		return err
+	}
+	stat, err := os.Stat(file)
+	if err != nil {
+		handleFileError(conn)
+		return err
+	}
+
+	if stat.IsDir() {
+		handleFileError(conn)
+		return errors.New(file + " is not a file")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	binary.Write(conn, binary.LittleEndian, stat.Size())
+
+	br := bufio.NewReader(fd)
+	buf := make([]byte, internal.CHUNK_SIZE)
+
+	for {
+		read, err := br.Read(buf)
+		if err != nil {
+			break
+		}
+
+		nonce := make([]byte, aesGCM.NonceSize())
+		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+			return err
+		}
+
+		encryptedRead := aesGCM.Seal(nonce, nonce, buf[:read], nil)
+
+		binary.Write(conn, binary.LittleEndian, int32(len(encryptedRead)))
+		conn.Write(encryptedRead)
 	}
 
 	return nil

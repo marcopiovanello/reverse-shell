@@ -12,7 +12,7 @@ import (
 )
 
 func HandleGlobDownload(path, outputPath string) client.ClientHandlerFunc {
-	return func(conn net.Conn) error {
+	return func(conn net.Conn, key []byte) error {
 		req, err := internal.NewPacket(command.PWD, []byte{})
 		if err != nil {
 			return err
@@ -35,6 +35,13 @@ func HandleGlobDownload(path, outputPath string) client.ClientHandlerFunc {
 		}
 
 		for _, file := range files {
+			if key != nil {
+				err := requestSingleAES(file, conn, outputPath, key)
+				if err != nil {
+					return err
+				}
+				return nil
+			}
 			err := requestSingle(file, conn, outputPath)
 			if err != nil {
 				return err

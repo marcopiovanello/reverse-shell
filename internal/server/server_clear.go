@@ -26,7 +26,7 @@ func NewClearTextServer(addr string) (Server, error) {
 func (s *ClearTextServer) ReadLoop(ctx context.Context) {
 	state := internal.NewState()
 	for {
-		if err := handlers.HandlePacket(s.conn, state); err != nil {
+		if err := handlers.HandlePacket(s.conn, state, nil); err != nil {
 			return
 		}
 	}

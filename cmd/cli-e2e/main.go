@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/ecdh"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
@@ -18,7 +20,14 @@ func main() {
 	addr := flag.String("c", "localhost:4000", "server address")
 	flag.Parse()
 
-	c, err := client.NewClearTextClient(*addr, func(conn net.Conn) {
+	curve := ecdh.P256()
+
+	privKey, err := curve.GenerateKey(rand.Reader)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	c, err := client.NewE2EClient(*addr, privKey, func(conn net.Conn) {
 		log.Println(conn.RemoteAddr(), "has connected!")
 	})
 	if err != nil {
