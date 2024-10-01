@@ -2,13 +2,16 @@ package main
 
 import (
 	"log"
+	"net"
 
 	"github.com/imperatrice00/oculis/internal/client"
 	"github.com/imperatrice00/oculis/internal/requests"
 )
 
 func main() {
-	c, err := client.NewClearTextClient("localhost:4000")
+	c, err := client.NewClearTextClient("localhost:4000", func(conn net.Conn) {
+		log.Println(conn.RemoteAddr(), "has connected!")
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}

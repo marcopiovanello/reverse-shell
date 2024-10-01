@@ -1,29 +1,21 @@
 package main
 
 import (
+	"context"
+	"flag"
 	"log"
-	"net"
 
-	"github.com/imperatrice00/oculis/internal"
-	"github.com/imperatrice00/oculis/internal/handlers/server"
+	"github.com/imperatrice00/oculis/internal/server"
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "0.0.0.0:4000")
+	addr := flag.String("c", "localhost:4000", "server address")
+	flag.Parse()
+
+	srv, err := server.NewClearTextServer(*addr)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	state := internal.NewState()
-
-	conn, err := listener.Accept()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	for {
-		if err := server.HandlePacket(conn, state); err != nil {
-			log.Println(err)
-		}
-	}
+	srv.ReadLoop(context.Background())
 }

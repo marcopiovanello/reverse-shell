@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strings"
 
@@ -17,7 +18,9 @@ func main() {
 	addr := flag.String("c", "localhost:4000", "server address")
 	flag.Parse()
 
-	c, err := client.NewClearTextClient(*addr)
+	c, err := client.NewClearTextClient(*addr, func(conn net.Conn) {
+		log.Println(conn.RemoteAddr(), "has connected!")
+	})
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -29,7 +32,10 @@ func main() {
 		line := scanner.Text()
 
 		if strings.Contains(line, "ls") {
-			c.Send(requests.HandleListDirectory(""))
+			err := c.Send(requests.HandleListDirectory(""))
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 		if strings.Contains(line, "cd") {
 			args := strings.Split(line, "cd")
@@ -38,7 +44,10 @@ func main() {
 			}
 
 			folder := strings.TrimSpace(args[1])
-			c.Send(requests.HandleChangeDirectory(folder))
+			err := c.Send(requests.HandleChangeDirectory(folder))
+			if err != nil {
+				log.Fatalln(err)
+			}
 		}
 		if strings.Contains(line, "download") {
 			args := strings.Split(line, "download")
@@ -49,9 +58,15 @@ func main() {
 			file := strings.TrimSpace(args[1])
 
 			if strings.Contains(file, "*") {
-				c.Send(requests.HandleGlobDownload(file, *output))
+				err := c.Send(requests.HandleGlobDownload(file, *output))
+				if err != nil {
+					log.Fatalln(err)
+				}
 			} else {
-				c.Send(requests.HandleFileDownload(file, *output))
+				err := c.Send(requests.HandleFileDownload(file, *output))
+				if err != nil {
+					log.Fatalln(err)
+				}
 			}
 		}
 
