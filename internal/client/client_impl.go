@@ -3,7 +3,8 @@ package client
 import "net"
 
 type ClearTextClient struct {
-	conn net.Conn
+	conn     net.Conn
+	listener net.Listener
 }
 
 func NewClearTextClient(addr string, onConnect func(net.Conn)) (Client, error) {
@@ -20,10 +21,23 @@ func NewClearTextClient(addr string, onConnect func(net.Conn)) (Client, error) {
 	onConnect(conn)
 
 	return &ClearTextClient{
-		conn: conn,
+		conn:     conn,
+		listener: listener,
 	}, nil
 }
 
 func (c *ClearTextClient) Send(hand ClientHandlerFunc) error {
 	return hand(c.conn)
+}
+
+func (c *ClearTextClient) Recoverer(onDiscovered func(net.Conn)) {
+	for {
+		conn, err := c.listener.Accept()
+		if err != nil {
+			return
+		}
+
+		onDiscovered(conn)
+		c.conn = conn
+	}
 }

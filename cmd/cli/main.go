@@ -25,6 +25,10 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	go c.Recoverer(func(c net.Conn) {
+		log.Println("Peer", c.RemoteAddr(), "has connected!")
+	})
+
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 
@@ -36,8 +40,7 @@ func main() {
 			if err != nil {
 				log.Fatalln(err)
 			}
-		}
-		if strings.Contains(line, "cd") {
+		} else if strings.Contains(line, "cd") {
 			args := strings.Split(line, "cd")
 			if len(args) != 2 {
 				continue
@@ -48,8 +51,7 @@ func main() {
 			if err != nil {
 				log.Fatalln(err)
 			}
-		}
-		if strings.Contains(line, "download") {
+		} else if strings.Contains(line, "download") {
 			args := strings.Split(line, "download")
 			if len(args) != 2 {
 				continue
