@@ -67,18 +67,6 @@ func requestSingle(path string, conn net.Conn, outputPath string) error {
 }
 
 func requestSingleAES(path string, conn net.Conn, outputPath string, key []byte) error {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	aesGCM, err := cipher.NewGCM(block)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	nonceSize := aesGCM.NonceSize()
-
 	req, err := internal.NewPacket(command.DOWNLOAD, []byte(path))
 	if err != nil {
 		return err
@@ -103,6 +91,18 @@ func requestSingleAES(path string, conn net.Conn, outputPath string, key []byte)
 
 	bar := progressbar.DefaultBytes(fileSize)
 	writer := io.MultiWriter(fd, bar)
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	nonceSize := aesGCM.NonceSize()
 
 	for {
 		buffer := &bytes.Buffer{}

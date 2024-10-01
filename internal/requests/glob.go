@@ -3,6 +3,7 @@ package requests
 import (
 	"bufio"
 	"encoding/json"
+	"log"
 	"net"
 	"path/filepath"
 
@@ -36,6 +37,7 @@ func HandleGlobDownload(path, outputPath string) client.ClientHandlerFunc {
 
 		for _, file := range files {
 			if key != nil {
+				log.Println(file)
 				err := requestSingleAES(file, conn, outputPath, key)
 				if err != nil {
 					return err

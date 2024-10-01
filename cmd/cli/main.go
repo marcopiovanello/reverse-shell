@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/imperatrice00/oculis/internal"
 	"github.com/imperatrice00/oculis/internal/client"
 	"github.com/imperatrice00/oculis/internal/requests"
 )
@@ -32,6 +33,8 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 
+	state := internal.NewState()
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -47,7 +50,7 @@ func main() {
 			}
 
 			folder := strings.TrimSpace(args[1])
-			err := c.Send(requests.HandleChangeDirectory(folder))
+			err := c.Send(requests.HandleChangeDirectory(folder, state))
 			if err != nil {
 				log.Fatalln(err)
 			}

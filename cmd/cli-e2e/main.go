@@ -9,8 +9,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
+	"github.com/imperatrice00/oculis/internal"
 	"github.com/imperatrice00/oculis/internal/client"
 	"github.com/imperatrice00/oculis/internal/requests"
 )
@@ -41,6 +43,8 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 
+	state := internal.NewState()
+
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -56,7 +60,7 @@ func main() {
 			}
 
 			folder := strings.TrimSpace(args[1])
-			err := c.Send(requests.HandleChangeDirectory(folder))
+			err := c.Send(requests.HandleChangeDirectory(folder, state))
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -69,9 +73,16 @@ func main() {
 			file := strings.TrimSpace(args[1])
 
 			if strings.Contains(file, "*") {
-				err := c.Send(requests.HandleGlobDownload(file, *output))
+				files, err := filepath.Glob(filepath.Join(state.GetCurrentDirectory(), file))
 				if err != nil {
 					log.Fatalln(err)
+				}
+
+				for _, file := range files {
+					err := c.Send(requests.HandleFileDownload(file, *output))
+					if err != nil {
+						log.Fatalln(err)
+					}
 				}
 			} else {
 				err := c.Send(requests.HandleFileDownload(file, *output))

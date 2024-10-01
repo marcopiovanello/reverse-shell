@@ -20,7 +20,7 @@ func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 	switch packet.Command {
 	case command.CD:
 		payload := packet.CleanPayload()
-		return handleChangeDirectory(payload, state)
+		return handleChangeDirectory(conn, payload, state)
 	case command.LS:
 		payload := packet.CleanPayload()
 		return handleListDirectory(conn, payload, state)

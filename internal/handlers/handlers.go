@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -27,7 +28,7 @@ func handleGetCurrentWorkingDirectory(conn net.Conn, state *internal.State) erro
 	return nil
 }
 
-func handleChangeDirectory(payload []byte, state *internal.State) error {
+func handleChangeDirectory(conn net.Conn, payload []byte, state *internal.State) error {
 	path := string(payload)
 
 	if !filepath.IsAbs(path) || path == "" {
@@ -44,6 +45,8 @@ func handleChangeDirectory(payload []byte, state *internal.State) error {
 	}
 
 	state.SetCurrentDirectory(filepath.Clean(path))
+
+	json.NewEncoder(conn).Encode(state.GetCurrentDirectory())
 
 	return nil
 }
@@ -76,7 +79,6 @@ func handleListDirectory(conn net.Conn, payload []byte, state *internal.State) e
 Request packet:
 
 	2 bytes                    512 bytes
-
 +---------+----------------------------------------------+
 | command |                   payload                    |
 +---------+----------------------------------------------+
@@ -84,7 +86,6 @@ Request packet:
 +--------------------------------------------------------+
 
 Response:
-
 File chunked every 512KB
 */
 
@@ -135,6 +136,8 @@ func handleFileDownloadAES(conn net.Conn, path []byte, state *internal.State, ke
 	if !filepath.IsAbs(file) {
 		file = filepath.Join(state.GetCurrentDirectory(), file)
 	}
+
+	log.Println(file)
 
 	fd, err := os.Open(file)
 	if err != nil {
