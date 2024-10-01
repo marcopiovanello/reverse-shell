@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -136,8 +135,6 @@ func handleFileDownloadAES(conn net.Conn, path []byte, state *internal.State, ke
 	if !filepath.IsAbs(file) {
 		file = filepath.Join(state.GetCurrentDirectory(), file)
 	}
-
-	log.Println(file)
 
 	fd, err := os.Open(file)
 	if err != nil {
