@@ -14,7 +14,7 @@ func main() {
 	addr := flag.String("c", "localhost:4000", "server address")
 	flag.Parse()
 
-	curve := ecdh.P256()
+	curve := ecdh.X25519()
 
 	privKey, err := curve.GenerateKey(rand.Reader)
 	if err != nil {

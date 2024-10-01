@@ -46,7 +46,7 @@ func (c *E2EClient) keyExchange(conn net.Conn) ([]byte, error) {
 
 	io.CopyN(&buf, conn, internal.PUBLIC_KEY_SIZE)
 
-	serverPubKey, err := ecdh.P256().NewPublicKey(buf.Bytes())
+	serverPubKey, err := ecdh.X25519().NewPublicKey(buf.Bytes())
 	if err != nil {
 		return nil, err
 	}

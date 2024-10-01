@@ -42,7 +42,7 @@ func (s *E2EServer) performKeyExchange() ([]byte, error) {
 	}
 
 	// Compute the curve and return the original ecdh public key (server)
-	pubKey, err := ecdh.P256().NewPublicKey(buf.Bytes())
+	pubKey, err := ecdh.X25519().NewPublicKey(buf.Bytes())
 	if err != nil {
 		return nil, err
 	}
