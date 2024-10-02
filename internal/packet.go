@@ -9,11 +9,11 @@ import (
 	"github.com/imperatrice00/oculis/internal/command"
 )
 
-const PAYLOAD_SIZE = 256
+const PAYLOAD_SIZE = 512
 
 type Packet struct {
-	Command command.Command
-	Payload [PAYLOAD_SIZE]byte
+	command command.Command
+	payload [PAYLOAD_SIZE]byte
 }
 
 func NewPacket(cmd command.Command, payload []byte) (*Packet, error) {
@@ -25,14 +25,26 @@ func NewPacket(cmd command.Command, payload []byte) (*Packet, error) {
 	copy(container[:], payload)
 
 	return &Packet{
-		Command: cmd,
-		Payload: container,
+		command: cmd,
+		payload: container,
 	}, nil
 }
 
-func (p *Packet) CleanPayload() []byte {
-	cut := bytes.IndexByte(p.Payload[:], byte(rune(0)))
-	return p.Payload[0:cut]
+func (p *Packet) Payload() (path []byte, extra []byte) {
+	path = p.payload[:255]
+	extra = p.payload[256:]
+
+	cut := bytes.IndexByte(path, byte(rune(0)))
+	path = path[0:cut]
+
+	cut = bytes.IndexByte(extra, byte(rune(0)))
+	extra = extra[0:cut]
+
+	return
+}
+
+func (p *Packet) Command() command.Command {
+	return p.command
 }
 
 func (p *Packet) Write(w io.Writer) {

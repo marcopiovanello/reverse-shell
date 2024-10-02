@@ -1,8 +1,6 @@
 package internal
 
 import (
-	"bytes"
-	"io"
 	"sync"
 )
 
@@ -27,11 +25,4 @@ func (s *ClientState) Get(key string) []byte {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return s.store[key]
-}
-
-func (s *ClientState) Read(key string) io.Reader {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	return bytes.NewReader(s.store[key])
 }

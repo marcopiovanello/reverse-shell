@@ -10,8 +10,9 @@ import (
 	"log"
 	"net"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
+	"time"
 
 	"github.com/imperatrice00/oculis/internal"
 	"github.com/imperatrice00/oculis/internal/client"
@@ -74,27 +75,18 @@ func main() {
 			file := strings.TrimSpace(args[1])
 
 			if strings.Contains(file, "*") {
-				var currentDirectory string
-
-				err := json.NewDecoder(state.Read("pwd")).Decode(&currentDirectory)
-				if err != nil {
-					log.Fatalln()
-				}
-
-				err = c.Send(requests.HandleComputeGlob(filepath.Join(currentDirectory, file), state))
+				err = c.Send(requests.HandleComputeGlob(file, state))
 				if err != nil {
 					log.Fatalln(err)
 				}
 
-				var globOutputFiles []string
+				time.Sleep(50 * time.Millisecond)
 
-				err = json.NewDecoder(state.Read("glob")).Decode(&globOutputFiles)
-				if err != nil {
-					log.Fatalln()
-				}
+				var globOutputFiles []string
+				json.Unmarshal(state.Get("glob"), &globOutputFiles)
 
 				for _, file := range globOutputFiles {
-					err := c.Send(requests.HandleFileDownload(filepath.Clean(file), *output))
+					err := c.Send(requests.HandleFileDownload(path.Clean(file), *output))
 					if err != nil {
 						log.Fatalln(err)
 					}

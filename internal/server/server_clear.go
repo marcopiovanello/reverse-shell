@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 	"net"
 
 	"github.com/imperatrice00/oculis/internal"
@@ -27,6 +28,7 @@ func (s *ClearTextServer) ReadLoop(ctx context.Context) {
 	state := internal.NewState()
 	for {
 		if err := handlers.HandlePacket(s.conn, state, nil); err != nil {
+			log.Println(err)
 			return
 		}
 	}

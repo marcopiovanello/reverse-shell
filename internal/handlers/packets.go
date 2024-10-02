@@ -17,15 +17,15 @@ func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 		return err
 	}
 
-	switch packet.Command {
+	switch packet.Command() {
 	case command.CD:
-		payload := packet.CleanPayload()
+		payload, _ := packet.Payload()
 		return handleChangeDirectory(conn, payload, state)
 	case command.LS:
-		payload := packet.CleanPayload()
+		payload, _ := packet.Payload()
 		return handleListDirectory(conn, payload, state)
 	case command.DOWNLOAD:
-		payload := packet.CleanPayload()
+		payload, _ := packet.Payload()
 		if secret != nil {
 			return handleFileDownloadAES(conn, payload, state, secret)
 		}
@@ -33,8 +33,8 @@ func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 	case command.PWD:
 		return handleGetCurrentWorkingDirectory(conn, state)
 	case command.GLOB:
-		payload := packet.CleanPayload()
-		return handleGlobGeneration(conn, payload)
+		payload, _ := packet.Payload()
+		return handleGlobGeneration(conn, payload, state)
 	case command.DOWNLOAD_DIR:
 		// TODO: implement handler
 		return errors.New("unimplemented method")

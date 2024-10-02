@@ -192,8 +192,8 @@ func handleFileError(conn net.Conn) {
 	binary.Write(conn, binary.LittleEndian, int64(-1))
 }
 
-func handleGlobGeneration(conn net.Conn, path []byte) error {
-	files, err := filepath.Glob(string(path))
+func handleGlobGeneration(conn net.Conn, glob []byte, state *internal.State) error {
+	files, err := filepath.Glob(filepath.Join(state.GetCurrentDirectory(), string(glob)))
 	if err != nil {
 		log.Fatalln(err)
 	}
