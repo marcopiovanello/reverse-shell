@@ -2,3 +2,4 @@
 downloads/
 *.jpg
 *.mp4
+cmd/stager/*
