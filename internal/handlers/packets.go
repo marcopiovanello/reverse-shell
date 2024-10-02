@@ -23,6 +23,9 @@ func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 		return handleChangeDirectory(conn, payload, state)
 	case command.LS:
 		payload, _ := packet.Payload()
+		// if secret != nil {
+		// 	return handleListDirectoryAES(conn, payload, secret, state)
+		// }
 		return handleListDirectory(conn, payload, state)
 	case command.DOWNLOAD:
 		payload, _ := packet.Payload()

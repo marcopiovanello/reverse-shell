@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -16,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/imperatrice00/oculis/internal"
+	"github.com/imperatrice00/oculis/internal/responses"
 )
 
 func handleGetCurrentWorkingDirectory(conn net.Conn, state *internal.State) error {
@@ -24,6 +26,36 @@ func handleGetCurrentWorkingDirectory(conn net.Conn, state *internal.State) erro
 		return err
 	}
 
+	conn.Write(internal.DELIMITER_CONN)
+	return nil
+}
+
+func handleGetCurrentWorkingDirectoryAES(conn net.Conn, key []byte, state *internal.State) error {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	buffer := &bytes.Buffer{}
+
+	err = json.NewEncoder(buffer).Encode(state.GetCurrentDirectory())
+	if err != nil {
+		return err
+	}
+
+	nonce := make([]byte, aesGCM.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return err
+	}
+
+	enc := aesGCM.Seal(nonce, nonce, buffer.Bytes(), nil)
+
+	conn.Write(enc)
 	conn.Write(internal.DELIMITER_CONN)
 	return nil
 }
@@ -63,13 +95,65 @@ func handleListDirectory(conn net.Conn, payload []byte, state *internal.State) e
 		return err
 	}
 
+	res := &responses.DirectoryList{
+		Current: path,
+		List:    make([]responses.Node, len(entries)),
+	}
+
+	for i, entry := range entries {
+		info, _ := entry.Info()
+
+		res.List[i] = responses.Node{
+			IsDir: entry.IsDir(),
+			Size:  info.Size(),
+			Name:  entry.Name(),
+			MTime: info.ModTime(),
+		}
+	}
+
+	json.NewEncoder(conn).Encode(res)
+	conn.Write(internal.DELIMITER_CONN)
+
+	return nil
+}
+
+func handleListDirectoryAES(conn net.Conn, payload, key []byte, state *internal.State) error {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesGCM, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	path := strings.TrimSpace(string(payload))
+
+	if !filepath.IsAbs(path) || path == "" {
+		path = filepath.Join(state.GetCurrentDirectory(), path)
+	}
+
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
 	files := make([]string, len(entries))
 
 	for i, entry := range entries {
 		files[i] = entry.Name()
 	}
 
-	json.NewEncoder(conn).Encode(files)
+	buffer := &bytes.Buffer{}
+	json.NewEncoder(buffer).Encode(files)
+
+	nonce := make([]byte, aesGCM.NonceSize())
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return err
+	}
+
+	conn.Write(aesGCM.Seal(nonce, nonce, buffer.Bytes(), nil))
 	conn.Write(internal.DELIMITER_CONN)
 
 	return nil

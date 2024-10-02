@@ -12,8 +12,8 @@ import (
 const PAYLOAD_SIZE = 512
 
 type Packet struct {
-	command command.Command
-	payload [PAYLOAD_SIZE]byte
+	Cmd command.Command
+	Pyl [PAYLOAD_SIZE]byte
 }
 
 func NewPacket(cmd command.Command, payload []byte) (*Packet, error) {
@@ -25,14 +25,14 @@ func NewPacket(cmd command.Command, payload []byte) (*Packet, error) {
 	copy(container[:], payload)
 
 	return &Packet{
-		command: cmd,
-		payload: container,
+		Cmd: cmd,
+		Pyl: container,
 	}, nil
 }
 
 func (p *Packet) Payload() (path []byte, extra []byte) {
-	path = p.payload[:255]
-	extra = p.payload[256:]
+	path = p.Pyl[:255]
+	extra = p.Pyl[256:]
 
 	cut := bytes.IndexByte(path, byte(rune(0)))
 	path = path[0:cut]
@@ -44,7 +44,7 @@ func (p *Packet) Payload() (path []byte, extra []byte) {
 }
 
 func (p *Packet) Command() command.Command {
-	return p.command
+	return p.Cmd
 }
 
 func (p *Packet) Write(w io.Writer) {
