@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -189,4 +190,16 @@ func handleFileDownloadAES(conn net.Conn, path []byte, state *internal.State, ke
 
 func handleFileError(conn net.Conn) {
 	binary.Write(conn, binary.LittleEndian, int64(-1))
+}
+
+func handleGlobGeneration(conn net.Conn, path []byte) error {
+	files, err := filepath.Glob(string(path))
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	json.NewEncoder(conn).Encode(files)
+	conn.Write(internal.DELIMITER_CONN)
+
+	return nil
 }

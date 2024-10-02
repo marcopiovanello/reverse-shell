@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"crypto/ecdh"
 	"crypto/rand"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -19,7 +20,7 @@ import (
 
 func main() {
 	output := flag.String("o", "downloads", "where downloaded files will be saved")
-	addr := flag.String("c", "localhost:4000", "server address")
+	addr := flag.String("c", "0.0.0.0:4000", "server address")
 	flag.Parse()
 
 	curve := ecdh.X25519()
@@ -43,7 +44,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 
-	state := internal.NewState()
+	state := internal.NewClientState()
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -73,13 +74,27 @@ func main() {
 			file := strings.TrimSpace(args[1])
 
 			if strings.Contains(file, "*") {
-				files, err := filepath.Glob(filepath.Join(state.GetCurrentDirectory(), file))
+				var currentDirectory string
+
+				err := json.NewDecoder(state.Read("pwd")).Decode(&currentDirectory)
+				if err != nil {
+					log.Fatalln()
+				}
+
+				err = c.Send(requests.HandleComputeGlob(filepath.Join(currentDirectory, file), state))
 				if err != nil {
 					log.Fatalln(err)
 				}
 
-				for _, file := range files {
-					err := c.Send(requests.HandleFileDownload(file, *output))
+				var globOutputFiles []string
+
+				err = json.NewDecoder(state.Read("glob")).Decode(&globOutputFiles)
+				if err != nil {
+					log.Fatalln()
+				}
+
+				for _, file := range globOutputFiles {
+					err := c.Send(requests.HandleFileDownload(filepath.Clean(file), *output))
 					if err != nil {
 						log.Fatalln(err)
 					}

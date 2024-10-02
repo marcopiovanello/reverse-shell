@@ -14,6 +14,7 @@ import (
 	"github.com/imperatrice00/oculis/internal"
 	"github.com/imperatrice00/oculis/internal/client"
 	"github.com/imperatrice00/oculis/internal/command"
+	"github.com/imperatrice00/oculis/pkg/paths"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -39,7 +40,7 @@ func requestSingle(path string, conn net.Conn, outputPath string) error {
 		fileSize  int64
 	)
 
-	fd, err := os.Create(filepath.Join(outputPath, filepath.Base(path)))
+	fd, err := os.Create(filepath.Join(outputPath, filepath.Base(filepath.ToSlash(path))))
 	if err != nil {
 		return err
 	}
@@ -49,7 +50,7 @@ func requestSingle(path string, conn net.Conn, outputPath string) error {
 		return errors.New("an error occurred")
 	}
 
-	bar := progressbar.DefaultBytes(fileSize)
+	bar := progressbar.DefaultBytes(fileSize, filepath.Base(path))
 	writer := io.MultiWriter(fd, bar)
 
 	for {
@@ -79,17 +80,17 @@ func requestSingleAES(path string, conn net.Conn, outputPath string, key []byte)
 		fileSize  int64
 	)
 
-	fd, err := os.Create(filepath.Join(outputPath, filepath.Base(path)))
-	if err != nil {
-		return err
-	}
-
 	binary.Read(conn, binary.LittleEndian, &fileSize)
 	if fileSize == int64(-1) {
 		return errors.New("an error occurred")
 	}
 
-	bar := progressbar.DefaultBytes(fileSize)
+	fd, err := os.Create(filepath.Join(outputPath, filepath.Base(paths.WindowsBase(path))))
+	if err != nil {
+		return err
+	}
+
+	bar := progressbar.DefaultBytes(fileSize, filepath.Base(paths.WindowsBase(path)))
 	writer := io.MultiWriter(fd, bar)
 
 	block, err := aes.NewCipher(key)

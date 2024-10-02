@@ -32,6 +32,9 @@ func HandlePacket(conn net.Conn, state *internal.State, secret []byte) error {
 		return handleFileDownload(conn, payload, state)
 	case command.PWD:
 		return handleGetCurrentWorkingDirectory(conn, state)
+	case command.GLOB:
+		payload := packet.CleanPayload()
+		return handleGlobGeneration(conn, payload)
 	case command.DOWNLOAD_DIR:
 		// TODO: implement handler
 		return errors.New("unimplemented method")

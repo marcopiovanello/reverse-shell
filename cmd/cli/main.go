@@ -33,7 +33,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("> ")
 
-	state := internal.NewState()
+	state := internal.NewClientState()
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -63,10 +63,11 @@ func main() {
 			file := strings.TrimSpace(args[1])
 
 			if strings.Contains(file, "*") {
-				err := c.Send(requests.HandleGlobDownload(file, *output))
-				if err != nil {
-					log.Fatalln(err)
-				}
+				// TODO: adapt to cli-e2e
+				// err := c.Send(requests.HandleGlobDownload(file, *output))
+				// if err != nil {
+				// 	log.Fatalln(err)
+				// }
 			} else {
 				err := c.Send(requests.HandleFileDownload(file, *output))
 				if err != nil {
