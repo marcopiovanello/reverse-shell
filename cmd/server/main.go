@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 
@@ -17,5 +16,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	srv.ReadLoop(context.Background())
+	log.Println("connected to", addr)
+
+	srv.ReadLoop()
 }

@@ -5,4 +5,4 @@ windows-stager:
 	GOOS=windows GOARCH=amd64 go build -o ciao.exe -ldflags="-w -s" cmd/stager/main.go
 
 linux-client:
-	GOOS=windows GOARCH=amd64 go build -o oculis -ldflags="-w -s" cmd/cli-e2e/main.go
+	GOOS=linux GOARCH=amd64 go build -o oculis -ldflags="-w -s" cmd/cli-e2e/main.go

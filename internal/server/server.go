@@ -5,5 +5,6 @@ import (
 )
 
 type Server interface {
-	ReadLoop(ctx context.Context)
+	ReadLoop()
+	Shutdown(ctx context.Context)
 }

@@ -6,6 +6,10 @@ import (
 	"crypto/rand"
 	"flag"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/imperatrice00/oculis/internal/server"
 )
@@ -21,10 +25,33 @@ func main() {
 		log.Fatalln(err)
 	}
 
+tryConn:
 	srv, err := server.NewE2EServer(*addr, privKey)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
+		log.Println("retrying...")
+		time.Sleep(time.Second * 5)
+		goto tryConn
 	}
 
-	srv.ReadLoop(context.Background())
+	log.Println("connected to", *addr)
+
+	go gracefulShutdown(srv)
+
+	srv.ReadLoop()
+}
+
+func gracefulShutdown(s server.Server) {
+	ctx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGQUIT,
+	)
+
+	go func() {
+		<-ctx.Done()
+		defer stop()
+
+		s.Shutdown(ctx)
+	}()
 }

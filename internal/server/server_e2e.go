@@ -62,7 +62,7 @@ func (s *E2EServer) performKeyExchange() ([]byte, error) {
 	return secret, nil
 }
 
-func (s *E2EServer) ReadLoop(ctx context.Context) {
+func (s *E2EServer) ReadLoop() {
 	state := internal.NewState()
 	for {
 		key, err := s.performKeyExchange()
@@ -75,4 +75,8 @@ func (s *E2EServer) ReadLoop(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (s *E2EServer) Shutdown(ctx context.Context) {
+	s.conn.Close()
 }

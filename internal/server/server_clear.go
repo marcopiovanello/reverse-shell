@@ -24,7 +24,7 @@ func NewClearTextServer(addr string) (Server, error) {
 	}, nil
 }
 
-func (s *ClearTextServer) ReadLoop(ctx context.Context) {
+func (s *ClearTextServer) ReadLoop() {
 	state := internal.NewState()
 	for {
 		if err := handlers.HandlePacket(s.conn, state, nil); err != nil {
@@ -32,4 +32,8 @@ func (s *ClearTextServer) ReadLoop(ctx context.Context) {
 			return
 		}
 	}
+}
+
+func (s *ClearTextServer) Shutdown(ctx context.Context) {
+	s.conn.Close()
 }
